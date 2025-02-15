@@ -105,6 +105,8 @@ Key Libraries Used:
 
 •	rich: Beautifies console output for better readability.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+
 Core Components:
 
 1.	Command-Line Argument Parsing:
@@ -154,6 +156,8 @@ If you find this tool helpful and would like to support the ongoing development,
 
 USDT Wallet: 0x6d9454534f20907638ef3ca33f5f8d3a185e1fce
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+
 
 •	Feedback: Share your experiences, suggestions, or improvements by opening an issue or contributing directly to the codebase. Your feedback is invaluable!
 ________________________________________
@@ -164,4 +168,6 @@ This script is provided for educational and research purposes only. The author a
 •	Legal Responsibility: Using this script for malicious purposes, such as unauthorized access to funds, is illegal and unethical. Users must comply with all relevant laws.
 
 •	Ethical Use: This tool is intended for learning about blockchain technology and should not be used for illegal activities.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
 
