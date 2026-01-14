@@ -4,6 +4,25 @@ import argparse  # Using argparse instead of optparse
 import multiprocessing
 from bip_utils import Bip32Slip10Secp256k1, Bip39MnemonicGenerator, Bip39SeedGenerator, Bip39WordsNum, EthAddrEncoder
 from rich import print
+import os
+import sys
+
+
+def set_console_title(title):
+    """Set the console/terminal title in a cross-platform way.
+    On Windows use ctypes.windll; on Unix-like systems use an ANSI OSC escape.
+    Safe no-op on unsupported environments.
+    """
+    try:
+        if os.name == 'nt':
+            ctypes.windll.kernel32.SetConsoleTitleW(title)
+        else:
+            # ANSI escape for terminal title (works in many Unix terminals)
+            sys.stdout.write(f"\x1b]0;{title}\x07")
+            sys.stdout.flush()
+    except Exception:
+        # Ignore failures to set title (e.g., when stdout is not a terminal)
+        pass
 
 
 def Main():
@@ -34,7 +53,7 @@ def Main():
 
     while True:
         z += 1
-        ctypes.windll.kernel32.SetConsoleTitleW(f"MATCH:{fu} SCAN:{z}")
+        set_console_title(f"MATCH:{fu} SCAN:{z}")
         mnemonic = Bip39MnemonicGenerator().FromWordsNumber(Bip39WordsNum.WORDS_NUM_24)
         seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
         bip32_mst_ctx = Bip32Slip10Secp256k1.FromSeed(seed_bytes)
