@@ -43,24 +43,41 @@ To hunt and crack private keys from Ethereum (ETH) mnemonics, use the following 
 
 *Copy code*
 
-python ethmagic.py -v <NUMBER> -f <FILE> -n <THREADS>
+python ethmagic.py -f <FILE> -n <THREADS> [options]
 
 
-Arguments:
+Arguments (select):
 
 •	-h or --help : Show help message and exit
 
 •	-f or --file : Path to the Ethereum rich address file (e.g., -f eth5.txt or --file eth5.txt)
 
-•	-v or --view : Print a message after generating this number of addresses
+•	-v or --view : (optional) Print a message after generating this number of addresses. If omitted, the program runs in auto mode and chooses a sensible value based on the measured per-worker throughput and the target interval (-t).
 
-•	-n or --thread : Number of threads (CPU cores) to use for processing
+•	-n or --thread : Number of worker processes to spawn
 
-Example Command:
+Additional options:
+
+•	-t or --target-interval : Target seconds between periodic full reports when -v is omitted (default: 15.0)
+
+•	-w or --cpu-window : Seconds over which CPU% is averaged for display (default: 5.0)
+
+•	-r or --report-interval : Seconds between short live progress reports printed to the console (default: 1.0). Set this to 5 to print the short progress line every 5s.
+
+Examples:
 
 *Copy code*
 
-python ethmagic.py -v 1000 -f eth5.txt -n 32
+# Auto-reporting: auto-select -v to target ~10s report interval and print short progress every 5s
+python ethmagic.py -f eth5.txt -n 2 -t 10 -r 5
+
+# Manual: force a report every 2000 generated addresses per worker
+python ethmagic.py -v 2000 -f eth5.txt -n 2
+
+# Short live progress every 5 seconds but periodic full reports every 10s (auto -v)
+python ethmagic.py -f eth5.txt -n 2 -t 10 -r 5
+
+Note: `-v` only controls reporting; it does not change the address-generation algorithm. Very small values for `-v` or `-r` can introduce additional I/O and synchronization overhead which may slightly reduce throughput.
 
 Polkadot:
 
