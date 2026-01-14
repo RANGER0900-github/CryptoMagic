@@ -77,6 +77,9 @@ python ethmagic.py -v 2000 -f eth5.txt -n 2
 # Short live progress every 5 seconds but periodic full reports every 10s (auto -v)
 python ethmagic.py -f eth5.txt -n 2 -t 10 -r 5
 
+# Example: high-frequency reporter + effectively disabled periodic full reports (good for combined-rate observation)
+python3 ethmagic.py -f eth5.txt -n 2 -v 10000000 -r 2 -t 10
+
 Note: `-v` only controls reporting; it does not change the address-generation algorithm. Very small values for `-v` or `-r` can introduce additional I/O and synchronization overhead which may slightly reduce throughput.
 
 Polkadot:
