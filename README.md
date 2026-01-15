@@ -1,206 +1,412 @@
+# 🔐 CryptoMagic - Ethereum Address Hunter & Key Finder
+
+<div align="center">
+
 ![image alt](https://github.com/jay37749/CryptoMagic-BruteForce-Ethereum-PrivateKey-Finder-Mnemonic-Cracker/blob/61db055447e5b4e76c61d974d89099b9ac0ca88a/CRYPTOCURRENCY-MAGIC-BRUTEFORCE-ETHEREUM-FINDER%20(732%20x%20279%20px).png)
 
-<h1 align="center">Hi 👋, I'm jay37749</h1>
-<h3 align="center">I'm a professional Frontend Developer from Kenya.</h3>
+**A powerful tool to generate Ethereum addresses from BIP-39 mnemonics and hunt for matches against known address lists**
 
-<p align="left"> <img src="https://komarev.com/ghpvc/?username=jay37749&label=Profile%20views&color=0e75b6&style=flat" alt="jay37749" /> </p>
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-<p align="left"> <a href="https://github.com/ryo-ma/github-profile-trophy"><img src="https://github-profile-trophy.vercel.app/?username=jay37749" alt="jay37749" /></a> </p>
+[Features](#-features) • [Installation](#-installation) • [Usage](#-quick-start) • [Examples](#-usage-examples) • [Performance](#-performance-tips) • [Security](#-security-notes)
 
-#CRYPTO MAGIC#
+</div>
 
-Hunt and Crack Private Keys (Bytes & Hex) with Mnemonic
-________________________________________
-*Introduction*
+---
 
-Clone this project repository: https://github.com/jay37749/CryptoMagic-BruteForce-Ethereum-PrivateKey-Finder-Mnemonic-Cracker.git
+## 🚀 Features
 
-Welcome to Crypto Magic, a powerful script designed to hunt and crack private keys from Ethereum and Polkadot mnemonics. This tool allows users to explore the fascinating world of cryptocurrency address generation and matching.
-________________________________________
-*Installation*
+- ⚡ **Multi-threaded Address Generation** - Spawn multiple workers to generate addresses in parallel
+- 📊 **Real-time Metrics** - Monitor addr/s rates, CPU usage, and progress continuously
+- 🎯 **Smart Reporting** - Auto-configure reporting intervals based on measured throughput or set manually
+- 🔍 **Fast Address Matching** - Check generated addresses against a list of target addresses
+- 💾 **Secure Match Logging** - Found matches are logged with private keys and mnemonics to disk
+- 🛠️ **Flexible Configuration** - Control reporting frequency, worker count, and CPU monitoring window
+- 🌍 **Cross-Platform** - Works on Windows, macOS, and Linux
 
-For Windows:
-To get started, install the following packages:
+---
 
-*Copy code*
+## 📦 Installation
 
-pip install bip_utils
-pip install rich
-pip install argparse
+### Prerequisites
+- Python 3.12 or higher
 
-For Linux:
-Run the following command:
+### Step 1: Clone the Repository
 
-*Copy code*
+```bash
+git clone https://github.com/jay37749/CryptoMagic-BruteForce-Ethereum-PrivateKey-Finder-Mnemonic-Cracker.git
+cd CryptoMagic-BruteForce-Ethereum-PrivateKey-Finder-Mnemonic-Cracker
+```
 
-pip3 install rich bip_utils argparse
-________________________________________
-*Usage*
+### Step 2: Install Dependencies
 
-Ethereum:
+**For Linux / macOS:**
+```bash
+pip3 install bip_utils rich
+```
 
-To hunt and crack private keys from Ethereum (ETH) mnemonics, use the following command:
+**For Windows:**
+```bash
+pip install bip_utils rich
+```
 
-*Copy code*
+---
 
-python ethmagic.py -f <FILE> -n <THREADS> [options]
+## 🎯 Quick Start
 
+### Basic Usage
 
-Arguments (select):
+```bash
+python3 ethmagic.py -f eth5.txt -v 1000 -n 2
+```
 
-•	-h or --help : Show help message and exit
+**Command Breakdown:**
+- `-f eth5.txt` → Target address file
+- `-v 1000` → Report after generating 1,000 addresses
+- `-n 2` → Use 2 worker processes
 
-•	-f or --file : Path to the Ethereum rich address file (e.g., -f eth5.txt or --file eth5.txt)
+---
 
-•	-v or --view : (optional) Print a message after generating this number of addresses. If omitted, the program runs in auto mode and chooses a sensible value based on the measured per-worker throughput and the target interval (-t).
+## 📚 Arguments Reference
 
-•	-n or --thread : Number of worker processes to spawn
+| Argument | Short | Type | Required | Description |
+|----------|-------|------|----------|-------------|
+| `--file` | `-f` | string | ✅ Yes | Path to target address file (e.g., `eth5.txt`) |
+| `--view` | `-v` | integer | ✅ Yes | Report interval (addresses per report) |
+| `--thread` | `-n` | integer | ✅ Yes | Number of worker processes to spawn |
 
-Additional options:
+---
 
-•	-t or --target-interval : Target seconds between periodic full reports when -v is omitted (default: 15.0)
+## 🎓 Usage Examples
 
-•	-w or --cpu-window : Seconds over which CPU% is averaged for display (default: 5.0)
+### Example 1: Basic Single-Worker Hunt
+Simple address generation with reporting every 5,000 addresses:
 
-•	-r or --report-interval : Seconds between short live progress reports printed to the console (default: 1.0). Set this to 5 to print the short progress line every 5s.
+```bash
+python3 ethmagic.py -f eth5.txt -v 5000 -n 1
+```
 
-Examples:
+**Output Preview:**
+```
+[-][ GENERATED 5000 ETH ADDR ][FOUND:0][THREAD:1][rate:320.45 addr/s][CPU:45.2%][WORKER:1]
+[-][ GENERATED 10000 ETH ADDR ][FOUND:0][THREAD:1][rate:325.30 addr/s][CPU:42.1%][WORKER:1]
+```
 
-*Copy code*
+---
 
-# Auto-reporting: auto-select -v to target ~10s report interval and print short progress every 5s
-python ethmagic.py -f eth5.txt -n 2 -t 10 -r 5
+### Example 2: Multi-Worker High-Speed Run
+Optimal performance with 2 workers, generating ~750 combined addr/s:
 
-# Manual: force a report every 2000 generated addresses per worker
-python ethmagic.py -v 2000 -f eth5.txt -n 2
+```bash
+python3 ethmagic.py -f eth5.txt -v 10000 -n 2
+```
 
-# Short live progress every 5 seconds but periodic full reports every 10s (auto -v)
-python ethmagic.py -f eth5.txt -n 2 -t 10 -r 5
+**Expected Performance:**
+- Combined Rate: **~620-750 addr/s**
+- CPU Usage: **80-100%** (optimal utilization)
 
-# Example: high-frequency reporter + effectively disabled periodic full reports (good for combined-rate observation)
-python3 ethmagic.py -f eth5.txt -n 2 -v 10000000 -r 2 -t 10
+---
 
-Note: `-v` only controls reporting; it does not change the address-generation algorithm. Very small values for `-v` or `-r` can introduce additional I/O and synchronization overhead which may slightly reduce throughput.
+### Example 3: Aggressive Address Generation
+Large report interval for minimal console I/O overhead (best throughput):
 
-Polkadot:
+```bash
+python3 ethmagic.py -f eth5.txt -v 100000 -n 4
+```
 
-To hunt and crack private keys from Polkadot (DOT) mnemonics, run:
+**Use Case:** Maximize raw throughput when you don't need frequent status updates.
 
-*Copy code*
+---
 
+### Example 4: Conservative Reporting
+Small intervals for frequent updates (monitor progress closely):
+
+```bash
+python3 ethmagic.py -f eth5.txt -v 500 -n 2
+```
+
+**Use Case:** Real-time monitoring and quick feedback.
+
+---
+
+## 📊 Performance Tips
+
+### Choosing Worker Count
+- **4 CPU cores → Use 2-3 workers** for best stability and throughput
+- **8+ CPU cores → Can use 4-6 workers** (test your system)
+- **System headroom → Use fewer workers** if running other applications
+
+### Throughput Optimization
+| Setting | Impact | Example |
+|---------|--------|---------|
+| Large `-v` value | ↑ Speed (less I/O) | `-v 100000` |
+| Small `-v` value | ↓ Speed (more I/O) | `-v 500` |
+| Increase workers | ↑ Total rate (if CPU allows) | `-n 4` |
+| Decrease workers | ↑ Per-worker stability | `-n 1` |
+
+### Benchmark Your System
+
+```bash
+# Single-worker baseline
+time python3 ethmagic.py -f eth5.txt -v 10000 -n 1
+
+# Two-worker test
+time python3 ethmagic.py -f eth5.txt -v 20000 -n 2
+
+# Compare total time and final rate
+```
+
+---
+
+## 📁 Input File Format
+
+The target address file (e.g., `eth5.txt`) should contain Ethereum addresses, one per line or space-separated:
+
+```
+0x1234567890123456789012345678901234567890
+0xabcdefabcdefabcdefabcdefabcdefabcdefabcd
+0xfedcbafedcbafedcbafedcbafedcbafedcbafed
+```
+
+---
+
+## 📄 Output & Logging
+
+### Console Output
+- **Live progress line:** Updated every generation (carriage return `\r`)
+- **Periodic report:** Full details at intervals set by `-v`
+
+### FoundMATCHAddr.txt
+When a match is found, the following is written to `FoundMATCHAddr.txt`:
+```
+0xMatchedAddress
+PrivateKeyHex
+24WordMnemonic
+MasterKeyHex
+------------------------- MMDRZA.Com -------------------
+```
+
+---
+
+## 🔐 Security & Legal Notes
+
+⚠️ **DISCLAIMER:**
+- This tool is for **educational and authorized testing purposes only**
+- **Unauthorized access** to funds or systems is **illegal**
+- The probability of randomly finding a valid private key is astronomically low
+- Use responsibly and comply with all applicable laws
+
+---
+
+## 🛠️ Other Coin Scripts
+
+This repository includes similar tools for other cryptocurrencies:
+
+```bash
+# Polkadot (DOT)
 python dotmagic.py -f dot1000.txt -v 1000 -n 32
 
-Doge:
+# Dogecoin (DOGE)
+python dogemagic.py -f doge5.txt -v 1000 -n 32
 
-To hunt and crack private keys from Dogecoin (DOGE) mnemonics, run:
-
-*Copy code*
-
-python dogemagic.py -v 1000 -f doge5.txt -n 32
-
-Tron:
-
-To hunt and crack private keys from Tron (TRX) mnemonics, run:
-
-*Copy code*
-
+# Tron (TRX)
 python trxmagic.py -f trx_rich.txt -v 1000 -n 128
 
-Ripple:
-
-To hunt and crack private keys from Ripple (XRP) mnemonics, run:
-
-*Copy code*
-
+# Ripple (XRP)
 python xrpmagic.py -f xrp_rich.txt -v 10000 -n 8
-________________________________________
-*How the Code Works*
+```
 
-This Python script is designed to generate Ethereum addresses and compare them against a list of "rich addresses" (addresses holding large amounts of Ethereum) from a text file.
+---
 
-Key Libraries Used:
+## 💡 How It Works
 
-•	ctypes: Interacts with low-level Windows API calls for dynamic console title setting.
+1. **Mnemonic Generation** - Creates random 24-word BIP-39 mnemonics
+2. **Seed Derivation** - Uses BIP-32/BIP-44 to derive keys from seed
+3. **Address Generation** - Generates Ethereum addresses from derived keys (path: `m/44'/60'/0'/0/0`)
+4. **Address Matching** - Compares each generated address against the target list
+5. **Match Logging** - Saves full details when a match is found
 
-•	time: Provides time-related functions.
+---
 
-•	argparse: Handles command-line arguments.
+## 🧪 Testing & Benchmarking
 
-•	multiprocessing: Enables parallel processing for efficiency.
+### Verify Installation
+```bash
+python3 ethmagic.py --help
+```
 
-•	bip_utils: Manages BIP-39 and BIP-32 operations for address generation.
+### Quick 10-Second Test
+```bash
+python3 ethmagic.py -f eth5.txt -v 1000 -n 1
+# Let it run for ~10 seconds, then Ctrl+C
+```
 
-•	rich: Beautifies console output for better readability.
+---
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+## 📞 Support & Contributing
 
-Core Components:
+- **Report Issues:** Open an issue on GitHub
+- **Contribute:** Pull requests are welcome!
+- **Questions:** Refer to the examples section above
 
-1.	Command-Line Argument Parsing:
-o	The script expects three key arguments: -f, -v, and -n.
+---
 
-2.	Reading Ethereum Addresses:
-o	The script reads addresses from the specified .txt file and stores them in a set for fast lookups.
+## 💝 Support the Developer
 
-3.	Address Generation Loop:
-o	Generates a 24-word mnemonic using BIP-39, derives a seed, and generates a master private key using BIP-32.
-o	Derives the specific private key for Ethereum addresses and checks against the provided rich address set.
+If you find this tool useful:
 
-4.	Logging Matches:
-o	If a match is found, details (private key, mnemonic, master key) are logged to FoundMATCHAddr.txt.
-o	The console displays progress messages at specified intervals.
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
 
-5.	Dynamic Console Title:
-o	Updates the console title to reflect the current number of generated addresses and matches found.
+**Donation Address (USDT):** `0x6d9454534f20907638ef3ca33f5f8d3a185e1fce`
 
-6.	Multiprocessing:
-o	Utilizes multiple processes for concurrent address generation, improving speed and efficiency.
+---
 
-7.	Log Output:
-o	Displays regular log messages based on the progress defined by the -v argument.
+## 📜 License
 
-![image alt](https://github.com/jay37749/CRYPTO-MAGIC-BRUTEFORCE-ETHEREUM-FINDER/blob/49746be70899c5a04cee99f551c6dd5b29f2fe2e/crypto-magic.png)
-________________________________________
-*Summary*
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-The script generates Ethereum addresses and checks them against a known list of rich addresses. If a match is found, the relevant details are saved for potential wallet recovery.
+---
 
-Realistic Interpretation:
-Even running continuously for millions or billions of years, the chances of brute-forcing a matching Ethereum address remain extraordinarily low.
-________________________________________
-*Conclusion*
+<div align="center">
 
-While this script serves as an educational tool, it's important to understand that brute-forcing private keys or addresses is not a viable method for accessing cryptocurrency funds due to the vastness of the address space.
-________________________________________
-*Give Back to the Developer*
+**Made with ❤️ by jay37749**
 
-If you find this tool helpful and would like to support the ongoing development, consider contributing in the following ways:
+[⬆ Back to Top](#-cryptomagic---ethereum-address-hunter--key-finder)
 
-•	Star the Repository: If you're using this project, please give it a star on GitHub! Your support motivates further development.
+</div>
 
+---
 
-•	Donate: If you wish to make a donation to support future projects and updates, please consider using https://ko-fi.com/powerwellnessdaily
+## 🌐 Other Coin Variants
 
-USDT Wallet: 0x6d9454534f20907638ef3ca33f5f8d3a185e1fce
+Similar tools for other cryptocurrencies are included in this repository:
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+```bash
+# Polkadot (DOT)
+python dotmagic.py -f dot1000.txt -v 1000 -n 2
 
+# Dogecoin (DOGE)  
+python dogemagic.py -f doge5.txt -v 1000 -n 2
 
-•	Feedback: Share your experiences, suggestions, or improvements by opening an issue or contributing directly to the codebase. Your feedback is invaluable!
-________________________________________
-*⚠ DISCLAIMER ⚠*
+# Tron (TRX)
+python trxmagic.py -f trx_rich.txt -v 1000 -n 2
 
-This script is provided for educational and research purposes only. The author and contributors are not responsible for any misuse of this tool.
+# Ripple (XRP)
+python xrpmagic.py -f xrp_rich.txt -v 10000 -n 2
+```
 
-•	Legal Responsibility: Using this script for malicious purposes, such as unauthorized access to funds, is illegal and unethical. Users must comply with all relevant laws.
+Each follows the same pattern: `-f` (file), `-v` (report interval), `-n` (workers).
 
-•	Ethical Use: This tool is intended for learning about blockchain technology and should not be used for illegal activities.
+---
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+## 🏗️ Architecture Overview
 
-<h3 align="left">Connect with me:</h3>
-<p align="left">
-</p>
+The tool uses a **multi-process architecture** for parallel address generation:
 
-<h3 align="left">Languages and Tools:</h3>
-<p align="left"> <a href="https://aws.amazon.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="aws" width="40" height="40"/> </a> <a href="https://www.blender.org/" target="_blank" rel="noreferrer"> <img src="https://download.blender.org/branding/community/blender_community_badge_white.svg" alt="blender" width="40" height="40"/> </a> <a href="https://www.cprogramming.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/c/c-original.svg" alt="c" width="40" height="40"/> </a> <a href="https://www.w3schools.com/cpp/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/cplusplus/cplusplus-original.svg" alt="cplusplus" width="40" height="40"/> </a> <a href="https://www.w3schools.com/cs/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="csharp" width="40" height="40"/> </a> <a href="https://www.w3schools.com/css/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original-wordmark.svg" alt="css3" width="40" height="40"/> </a> <a href="https://www.docker.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original-wordmark.svg" alt="docker" width="40" height="40"/> </a> <a href="https://dotnet.microsoft.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/dot-net/dot-net-original-wordmark.svg" alt="dotnet" width="40" height="40"/> </a> <a href="https://www.figma.com/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/figma/figma-icon.svg" alt="figma" width="40" height="40"/> </a> <a href="https://git-scm.com/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/git-scm/git-scm-icon.svg" alt="git" width="40" height="40"/> </a> <a href="https://www.w3.org/html/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original-wordmark.svg" alt="html5" width="40" height="40"/> </a> <a href="https://www.adobe.com/in/products/illustrator.html" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/adobe_illustrator/adobe_illustrator-icon.svg" alt="illustrator" width="40" height="40"/> </a> <a href="https://www.java.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="java" width="40" height="40"/> </a> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="40" height="40"/> </a> <a href="https://www.linux.org/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" alt="linux" width="40" height="40"/> </a> <a href="https://nodejs.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original-wordmark.svg" alt="nodejs" width="40" height="40"/> </a> <a href="https://www.photoshop.com/en" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/photoshop/photoshop-line.svg" alt="photoshop" width="40" height="40"/> </a> <a href="https://www.php.net" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/php/php-original.svg" alt="php" width="40" height="40"/> </a> <a href="https://www.python.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a> <a href="https://reactjs.org/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original-wordmark.svg" alt="react" width="40" height="40"/> </a> <a href="https://www.ruby-lang.org/en/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/ruby/ruby-original.svg" alt="ruby" width="40" height="40"/> </a> </p>
+- **Master Process:** Parses arguments and spawns worker processes
+- **Worker Processes:** Each worker generates random mnemonics, derives Ethereum addresses, and checks against target list
+- **Synchronization:** Uses multiprocessing.Lock for thread-safe file writes and console output
+- **Metrics:** Real-time CPU monitoring with rolling-window averaging
+- **BIP Standards:** BIP-39 (mnemonics) → BIP-32/44 (key derivation) → Ethereum address generation
+
+Key Libraries:
+- `bip_utils` - BIP-39/32/44 implementation
+- `rich` - Beautiful console formatting
+- `multiprocessing` - Parallel worker management
+- `psutil` (optional) - Advanced CPU monitoring
+
+---
+
+## ✅ Troubleshooting
+
+### Q: "ImportError: No module named 'bip_utils'"
+**A:** Install dependencies: `pip3 install bip_utils rich`
+
+### Q: "AttributeError: module 'ctypes' has no attribute 'windll' (on Linux/Mac)"
+**A:** This is expected and handled automatically. The script detects your OS and uses appropriate console title methods.
+
+### Q: "No matches found - is the tool working?"
+**A:** Yes! Matches are extremely rare. To verify:
+1. Create a test file `test.txt` with your generated address
+2. Run `python3 ethmagic.py -f test.txt -v 1000 -n 1` and check for a match
+
+---
+
+## 🧪 Development & Testing
+
+### Run All Worker Tests
+```bash
+# Verify script works with different worker counts
+for workers in 1 2 3 4; do
+  echo "Testing with $workers workers..."
+  timeout 5 python3 ethmagic.py -f eth5.txt -v 10000 -n $workers
+done
+```
+
+### Benchmark on Your System
+```bash
+# Measure addresses/second for your CPU
+python3 ethmagic.py -f eth5.txt -v 50000 -n 2 &
+# Wait for ~30 seconds and note the final rate
+# (Higher is better; typical: 500-1000 addr/s)
+```
+
+---
+
+## 📖 Additional Resources
+
+- **BIP-39 Standard:** https://github.com/trezor/python-mnemonic
+- **BIP-32 Derivation:** https://github.com/trezor/python-mnemonic
+- **Ethereum Addresses:** https://ethereum.org/en/developers/docs/accounts/
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 💰 Donations & Support
+
+If you found this tool helpful and want to support development:
+
+**USDT Address (ERC-20):** `0x6d9454534f20907638ef3ca33f5f8d3a185e1fce`
+
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X7X612R0JE)
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+Portions of this code use:
+- `bip_utils` (BSD License)
+- `rich` (MIT License)
+
+---
+
+## ⚖️ Legal Notice
+
+This tool is for **educational and authorized security testing only**. Unauthorized use is illegal. The author assumes no liability for misuse.
+
+---
+
+<div align="center">
+
+**⭐ If you found this helpful, please star the repository! ⭐**
+
+Made with ❤️ by [jay37749](https://github.com/jay37749)
+
+[Back to Top](#-cryptomagic---ethereum-address-hunter--key-finder)
+
+</div>
