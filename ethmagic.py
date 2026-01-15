@@ -4,8 +4,14 @@ import argparse  # Using argparse instead of optparse
 import multiprocessing
 from bip_utils import Bip32Slip10Secp256k1, Bip39MnemonicGenerator, Bip39SeedGenerator, Bip39WordsNum, EthAddrEncoder
 from rich import print
+from rich.console import Console
+from rich.table import Table
+from rich.live import Live
+from rich.panel import Panel
 import os
 import sys
+
+console = Console()
 
 
 def set_console_title(title):
@@ -98,12 +104,14 @@ class CPUUsage:
             return 0.0
 
 
-def Main(worker_id, filename, logpx, thco, add, lock):
+def Main(worker_id, filename, logpx, thco, add, lock, shared_total, start_time):
     """Worker function that generates keys and reports progress.
     worker_id: 1-based ID for this worker process
     filename, logpx, thco: parsed and typed (ints where appropriate)
     add: set of target addresses
     lock: multiprocessing.Lock instance for synchronization
+    shared_total: multiprocessing.Value to track combined address count
+    start_time: shared start time for all workers
     """
     # Local counters and timers
     z = 0
@@ -115,6 +123,10 @@ def Main(worker_id, filename, logpx, thco, add, lock):
 
     while True:
         z += 1
+        # Update shared total under lock
+        with lock:
+            shared_total.value += 1
+        
         set_console_title(f"W{worker_id} MATCH:{fu} SCAN:{z}")
         mnemonic = Bip39MnemonicGenerator().FromWordsNumber(Bip39WordsNum.WORDS_NUM_24)
         seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
@@ -156,7 +168,22 @@ def Main(worker_id, filename, logpx, thco, add, lock):
         elif time.perf_counter() - last_live_update >= 1.0:
             # Live short progress line (overwrites in terminal) - throttled to ~1 second
             last_live_update = time.perf_counter()
-            safe_print(lock, f"[red][-][ GENERATED [cyan]{z}[/cyan] ETH ADDR ][FOUND:[white]{fu}[/white]][THREAD:[cyan]{thco}[/cyan]][rate:[white]{rate:.2f} addr/s[/white]][CPU:[white]{cpu:.1f}%[/white]][WORKER:[cyan]{worker_id}[/cyan]][/red]", end="\r", flush=True)
+            combined_total = shared_total.value
+            combined_elapsed = time.perf_counter() - start_time
+            combined_rate = (combined_total / combined_elapsed) if combined_elapsed > 0 else 0.0
+            
+            # Beautiful color-coded output
+            status_line = (
+                f"[bold cyan]⚡ COMBINED[/bold cyan] "
+                f"[yellow]{combined_total:,}[/yellow] addr "
+                f"[green]{combined_rate:.1f}[/green] addr/s | "
+                f"[bold cyan]W{worker_id}[/bold cyan] "
+                f"[magenta]{z:,}[/magenta] addr "
+                f"[cyan]{rate:.1f}[/cyan] addr/s | "
+                f"[red]CPU {cpu:.1f}%[/red] | "
+                f"[white]Matches: {fu}[/white]"
+            )
+            safe_print(lock, status_line, end="\r", flush=True)
 
 
 if __name__ == '__main__':
@@ -181,11 +208,24 @@ if __name__ == '__main__':
 
     # Create a lock for synchronized console output and file writes
     lock = multiprocessing.Lock()
+    
+    # Create shared counter for combined total addresses
+    shared_total = multiprocessing.Value('i', 0)
+    start_time = time.perf_counter()
+    
+    # Print banner
+    banner = Panel(
+        f"[bold cyan]🔐 CryptoMagic - Ethereum Address Hunter[/bold cyan]\n"
+        f"[yellow]Workers: {thco}[/yellow] | [magenta]Target Addresses: {len(add)}[/magenta] | [green]Report Interval: {logpx:,}[/green]",
+        title="[bold blue]⚡ START[/bold blue]",
+        border_style="cyan"
+    )
+    console.print(banner)
 
     jobs = []
     try:
         for i in range(thco):
-            p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock), daemon=True)
+            p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock, shared_total, start_time), daemon=True)
             jobs.append(p)
             p.start()
 
@@ -194,6 +234,7 @@ if __name__ == '__main__':
             p.join()
     except KeyboardInterrupt:
         # Gracefully terminate all workers
+        console.print("\n[bold yellow]⚠️  Shutting down workers...[/bold yellow]")
         for p in jobs:
             try:
                 p.terminate()
@@ -204,6 +245,18 @@ if __name__ == '__main__':
                 p.join(timeout=1)
             except Exception:
                 pass
+        
+        # Final stats
+        elapsed = time.perf_counter() - start_time
+        final_rate = (shared_total.value / elapsed) if elapsed > 0 else 0.0
+        summary = Panel(
+            f"[bold cyan]Total Generated:[/bold cyan] [yellow]{shared_total.value:,}[/yellow] addresses\n"
+            f"[bold cyan]Final Rate:[/bold cyan] [green]{final_rate:.1f}[/green] addr/s\n"
+            f"[bold cyan]Total Time:[/bold cyan] [magenta]{elapsed:.1f}s[/magenta]",
+            title="[bold red]📊 SUMMARY[/bold red]",
+            border_style="red"
+        )
+        console.print(summary)
     except Exception as e:
         safe_print(lock, f"[red]Unexpected error in launcher: {e}[/red]")
         for p in jobs:
