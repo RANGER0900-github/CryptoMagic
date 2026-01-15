@@ -104,13 +104,14 @@ class CPUUsage:
             return 0.0
 
 
-def Main(worker_id, filename, logpx, thco, add, lock, shared_total, start_time):
+def Main(worker_id, filename, logpx, thco, add, lock, shared_total, shared_matches, start_time):
     """Worker function that generates keys and reports progress.
     worker_id: 1-based ID for this worker process
     filename, logpx, thco: parsed and typed (ints where appropriate)
     add: set of target addresses
     lock: multiprocessing.Lock instance for synchronization
     shared_total: multiprocessing.Value to track combined address count
+    shared_matches: multiprocessing.Value to track total matches found
     start_time: shared start time for all workers
     """
     # Local counters and timers
@@ -145,6 +146,10 @@ def Main(worker_id, filename, logpx, thco, add, lock, shared_total, start_time):
 
         if addr in add:
             fu += 1
+            # Update shared matches counter
+            with lock:
+                shared_matches.value += 1
+            
             safe_print(lock, f"[green1][+] MATCH ADDRESS FOUND BY WORKER {worker_id} :[/green1] [white]{addr}[/white]")
             safe_print(lock, f"PrivateKey (Byte) : [green1]{PrivateKeyBytes}[/green1]\n[gold1]{mnemonic}[/gold1]\n[red1]MasterKey (Byte) : [/red1][green1]{MasterKey}[/green1]")
             # Write match to disk under lock to avoid interleaving
@@ -169,19 +174,17 @@ def Main(worker_id, filename, logpx, thco, add, lock, shared_total, start_time):
             # Live short progress line (overwrites in terminal) - throttled to ~1 second
             last_live_update = time.perf_counter()
             combined_total = shared_total.value
+            combined_matches = shared_matches.value
             combined_elapsed = time.perf_counter() - start_time
             combined_rate = (combined_total / combined_elapsed) if combined_elapsed > 0 else 0.0
             
-            # Beautiful color-coded output
+            # Simple, clean combined output
             status_line = (
-                f"[bold cyan]⚡ COMBINED[/bold cyan] "
-                f"[yellow]{combined_total:,}[/yellow] addr "
-                f"[green]{combined_rate:.1f}[/green] addr/s | "
-                f"[bold cyan]W{worker_id}[/bold cyan] "
-                f"[magenta]{z:,}[/magenta] addr "
-                f"[cyan]{rate:.1f}[/cyan] addr/s | "
-                f"[red]CPU {cpu:.1f}%[/red] | "
-                f"[white]Matches: {fu}[/white]"
+                f"[bold cyan]⚡ Generated[/bold cyan] [yellow]{combined_total:,}[/yellow] addresses | "
+                f"[green]{combined_rate:.1f} addr/s[/green] | "
+                f"[red]CPU [bold]{cpu:.1f}%[/bold][/red] | "
+                f"[magenta]Found:[/magenta] [bold white]{combined_matches}[/bold white] | "
+                f"[cyan]Workers = {thco}[/cyan]"
             )
             safe_print(lock, status_line, end="\r", flush=True)
 
@@ -209,8 +212,9 @@ if __name__ == '__main__':
     # Create a lock for synchronized console output and file writes
     lock = multiprocessing.Lock()
     
-    # Create shared counter for combined total addresses
-    shared_total = multiprocessing.Value('i', 0)
+    # Create shared counters
+    shared_total = multiprocessing.Value('i', 0)  # Total addresses generated
+    shared_matches = multiprocessing.Value('i', 0)  # Total matches found
     start_time = time.perf_counter()
     
     # Print banner
@@ -225,7 +229,7 @@ if __name__ == '__main__':
     jobs = []
     try:
         for i in range(thco):
-            p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock, shared_total, start_time), daemon=True)
+            p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock, shared_total, shared_matches, start_time), daemon=True)
             jobs.append(p)
             p.start()
 
@@ -251,6 +255,7 @@ if __name__ == '__main__':
         final_rate = (shared_total.value / elapsed) if elapsed > 0 else 0.0
         summary = Panel(
             f"[bold cyan]Total Generated:[/bold cyan] [yellow]{shared_total.value:,}[/yellow] addresses\n"
+            f"[bold cyan]Total Found:[/bold cyan] [bold green]{shared_matches.value}[/bold green] matches\n"
             f"[bold cyan]Final Rate:[/bold cyan] [green]{final_rate:.1f}[/green] addr/s\n"
             f"[bold cyan]Total Time:[/bold cyan] [magenta]{elapsed:.1f}s[/magenta]",
             title="[bold red]📊 SUMMARY[/bold red]",
