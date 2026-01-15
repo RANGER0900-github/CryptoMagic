@@ -110,6 +110,7 @@ def Main(worker_id, filename, logpx, thco, add, lock):
     fu = 0
     logp = 0
     start_perf = time.perf_counter()
+    last_live_update = start_perf  # Track last time we printed a live progress line
     cpu_monitor = CPUUsage()
 
     while True:
@@ -152,8 +153,9 @@ def Main(worker_id, filename, logpx, thco, add, lock):
             # Show a concise mnemonic preview (first 6 words) and indicate truncation
             mnemonic_preview = " ".join(Words24.split()[0:6]) + " ... (truncated)"
             safe_print(lock, f"[red][MasterKey : [white]{MasterKey.upper()}[/white]][/red]\n[white on red3][MNEMONIC : {mnemonic_preview}][/white on red3]")
-        else:
-            # Live short progress line (overwrites in terminal)
+        elif time.perf_counter() - last_live_update >= 1.0:
+            # Live short progress line (overwrites in terminal) - throttled to ~1 second
+            last_live_update = time.perf_counter()
             safe_print(lock, f"[red][-][ GENERATED [cyan]{z}[/cyan] ETH ADDR ][FOUND:[white]{fu}[/white]][THREAD:[cyan]{thco}[/cyan]][rate:[white]{rate:.2f} addr/s[/white]][CPU:[white]{cpu:.1f}%[/white]][WORKER:[cyan]{worker_id}[/cyan]][/red]", end="\r", flush=True)
 
 
