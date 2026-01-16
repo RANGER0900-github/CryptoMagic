@@ -530,19 +530,32 @@ if __name__ == '__main__':
         webhook_url = f"http://localhost:{webhook_port}/webhook"
         console.print(f"[bold cyan]🚀 Starting webhook server on port {webhook_port}...[/bold cyan]")
         try:
-            # Start webhook server in background
+            # Start webhook server in background with captured logs
             webhook_server_process = subprocess.Popen(
                 [sys.executable, os.path.join(os.path.dirname(__file__), 'webhook_server.py')],
                 env={**os.environ, 'FLASK_PORT': str(webhook_port)},
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                preexec_fn=os.setsid if sys.platform != 'win32' else None
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                preexec_fn=os.setsid if sys.platform != 'win32' else None,
+                text=True
             )
-            # Wait for server to be ready
-            if wait_for_webhook_ready(webhook_url):
-                console.print(f"[bold green]✅ Webhook server started on port {webhook_port}[/bold green]")
+            # Give server time to start and bind to port
+            time.sleep(1.5)
+            
+            # Check if process is still alive (crashed if not)
+            if webhook_server_process.poll() is not None:
+                # Process died, capture error output
+                stdout, stderr = webhook_server_process.communicate()
+                error_msg = stderr or stdout or "Unknown error"
+                console.print(f"[bold red]❌ Webhook server failed to start:[/bold red]")
+                console.print(f"[red]{error_msg}[/red]")
+                webhook_url = None
             else:
-                console.print(f"[bold yellow]⚠️  Webhook server started but not responding. Continuing anyway...[/bold yellow]")
+                # Process still running, do health check
+                if wait_for_webhook_ready(webhook_url):
+                    console.print(f"[bold green]✅ Webhook server started on port {webhook_port}[/bold green]")
+                else:
+                    console.print(f"[bold yellow]⚠️  Webhook server started but not responding. Continuing anyway...[/bold yellow]")
         except Exception as e:
             console.print(f"[bold yellow]⚠️  Could not auto-start webhook server: {e}[/bold yellow]")
             console.print(f"[bold yellow]   Make sure webhook_server.py exists in the same directory[/bold yellow]")
