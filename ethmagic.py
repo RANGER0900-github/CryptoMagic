@@ -31,6 +31,24 @@ TELEGRAM_BOT_TOKEN = "6668621875:AAHaIDS59aIPpWYf3JkWZuAkOaRatknClG0"
 TELEGRAM_CHAT_ID = "1702319284"
 IST = pytz.timezone('Asia/Kolkata')
 
+def wait_for_webhook_ready(webhook_url, max_retries=15, retry_delay=0.5):
+    """Wait for webhook server to be ready with exponential backoff."""
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(webhook_url.replace('/webhook', '/health'), timeout=2)
+            if response.status_code == 200:
+                print(f"[DEBUG] Webhook server is ready after {attempt + 1} attempts")
+                return True
+        except (requests.ConnectionError, requests.Timeout):
+            pass
+        
+        if attempt < max_retries - 1:
+            time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 1.5, 2)  # Exponential backoff, max 2 seconds
+    
+    print(f"[yellow]⚠️  Webhook server not responding after {max_retries} retries[/yellow]")
+    return False
+
 def send_webhook_notification(event_type, data):
     """Send notification via webhook (platform-agnostic)."""
     if not WEBHOOK_URL:
@@ -499,8 +517,11 @@ if __name__ == '__main__':
                 stderr=subprocess.DEVNULL,
                 preexec_fn=os.setsid if sys.platform != 'win32' else None
             )
-            time.sleep(2)  # Wait for server to start
-            console.print(f"[bold green]✅ Webhook server started on port {webhook_port}[/bold green]")
+            # Wait for server to be ready
+            if wait_for_webhook_ready(webhook_url):
+                console.print(f"[bold green]✅ Webhook server started on port {webhook_port}[/bold green]")
+            else:
+                console.print(f"[bold yellow]⚠️  Webhook server started but not responding. Continuing anyway...[/bold yellow]")
         except Exception as e:
             console.print(f"[bold yellow]⚠️  Could not auto-start webhook server: {e}[/bold yellow]")
             console.print(f"[bold yellow]   Make sure webhook_server.py exists in the same directory[/bold yellow]")
