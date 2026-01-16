@@ -176,7 +176,7 @@ python3 ethmagic.py -f eth5.txt -v 50000 -n 4 --port 5689
 That's it! You'll receive:
 - ✅ **Startup Message** - Bot configuration and worker details
 - 📊 **Daily Stats** - Addresses generated, generation rate, CPU usage, time elapsed
-- 🎯 **Match Alerts** - Immediate notification with worker name and full details when a match is found
+- 🎯 **Match Alerts** - [See Match Alert Notifications section below](#-match-alert-notifications) for full details
 - 🛑 **Shutdown Message** - Graceful shutdown with final statistics
 
 ### Advanced: Custom Webhook URL
