@@ -31,6 +31,20 @@ TELEGRAM_BOT_TOKEN = "6668621875:AAHaIDS59aIPpWYf3JkWZuAkOaRatknClG0"
 TELEGRAM_CHAT_ID = "1702319284"
 IST = pytz.timezone('Asia/Kolkata')
 
+def find_free_port(start_port=3000, max_port=65535):
+    """Find a free port by attempting to bind to sequential ports."""
+    import socket
+    for port in range(start_port, max_port + 1):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(('127.0.0.1', port))
+            sock.close()
+            print(f"[DEBUG] Found free port: {port}")
+            return port
+        except OSError:
+            pass
+    raise RuntimeError(f"No free ports found between {start_port} and {max_port}")
+
 def wait_for_webhook_ready(webhook_url, max_retries=15, retry_delay=0.5):
     """Wait for webhook server to be ready with exponential backoff."""
     for attempt in range(max_retries):
@@ -492,15 +506,22 @@ if __name__ == '__main__':
                         help="Name of this worker instance for Telegram reports [Example: --worker-name robo1]")
     parser.add_argument('--webhook-url', dest="webhookUrl", default=None,
                         help="Webhook URL for notifications (supports any platform) [Example: --webhook-url http://localhost:3000/webhook]")
-    parser.add_argument('--port', dest="port", type=int, default=3000,
-                        help="Port for auto-starting webhook server [Example: --port 5689]")
+    parser.add_argument('--port', dest="port", type=int, default=None,
+                        help="Port for auto-starting webhook server [Example: --port 5689]. If not specified, auto-detects a free port.")
 
     args = parser.parse_args()
     filename = args.filenameEth
     logpx = int(args.ViewPrint)
     thco = int(args.ThreadCount)
     worker_name = args.workerName
-    webhook_port = args.port
+    
+    # Auto-detect free port if not specified
+    if args.port is None:
+        console.print("[bold cyan]🔍 Auto-detecting free port...[/bold cyan]")
+        webhook_port = find_free_port(start_port=3000)
+        console.print(f"[bold green]✨ Auto-selected port: {webhook_port}[/bold green]")
+    else:
+        webhook_port = args.port
     
     # Auto-start webhook server if not manually specified
     webhook_server_process = None
