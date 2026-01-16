@@ -176,7 +176,7 @@ python3 ethmagic.py -f eth5.txt -v 50000 -n 4 --port 5689
 That's it! You'll receive:
 - ✅ **Startup Message** - Bot configuration and worker details
 - 📊 **Daily Stats** - Addresses generated, generation rate, CPU usage, time elapsed
-- 🎯 **Match Alerts** - Immediate notification when a match is found
+- 🎯 **Match Alerts** - Immediate notification with worker name and full details when a match is found
 - 🛑 **Shutdown Message** - Graceful shutdown with final statistics
 
 ### Advanced: Custom Webhook URL
@@ -200,6 +200,37 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'your_token')
 DISCORD_WEBHOOK = os.environ.get('DISCORD_WEBHOOK', None)
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK', None)
 ```
+
+---
+
+## 🎯 Match Alert Notifications
+
+When a matching address is found, the bot sends **immediate Telegram alerts** with full details:
+
+### What You'll Receive:
+```
+🎉 MATCH FOUND!
+Date: 17 January 2026, 02:30 PM IST
+
+👤 Worker: Worker-2
+📍 Address: 0x1234567890abcdefabcdefabcdefabcdefabcdef
+
+🔑 Private Key: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+
+🌱 Mnemonic (24 words):
+abandon ability able about above absent absolute absorb abstract abuse access
+accident account accuse achieve acid acoustic acoustics across acres activate
+
+✅ Full details saved to FoundMATCHAddr.txt
+```
+
+### Features:
+- 📍 **Matched Address** - The exact address that was found
+- 👤 **Worker ID** - Which worker process found the match
+- 🔑 **Private Key** - Full hexadecimal private key
+- 🌱 **24-Word Mnemonic** - BIP-39 seed phrase
+- ⏱️ **Timestamp** - Exact time the match was detected (IST)
+- 💾 **File Attachment** - FoundMATCHAddr.txt sent as backup
 
 ---
 

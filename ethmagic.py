@@ -196,6 +196,7 @@ def send_daily_stats(worker_name, filename, thco, total_generated, avg_rate, ela
 def file_monitor_thread(check_interval=5):
     """Monitor FoundMATCHAddr.txt for changes and send via webhook."""
     last_hash = None
+    last_line_count = 0
     while True:
         try:
             time.sleep(check_interval)
@@ -205,30 +206,80 @@ def file_monitor_thread(check_interval=5):
                 
                 if last_hash is None:
                     last_hash = file_hash
+                    # Count existing lines
+                    with open('FoundMATCHAddr.txt', 'r') as f:
+                        last_line_count = len(f.readlines())
                 elif file_hash != last_hash:
                     # File changed, send it
                     last_hash = file_hash
                     now_ist = datetime.now(IST)
                     
-                    # Read file content
+                    # Read file content and extract new matches
                     with open('FoundMATCHAddr.txt', 'r') as f:
-                        file_content = f.read()
+                        lines = f.readlines()
+                    
+                    current_line_count = len(lines)
+                    
+                    # Extract new match entries (each match is separated by the divider line)
+                    matches = []
+                    current_match = []
+                    worker_name = "Unknown"
+                    
+                    for line in lines:
+                        if line.startswith('[WORKER'):
+                            # Extract worker number from [WORKER N]
+                            worker_num = line.strip().replace('[WORKER ', '').replace(']', '')
+                            worker_name = f"Worker-{worker_num}"
+                            current_match = [worker_name]
+                        elif '---' in line and len(current_match) > 0:
+                            # End of match block
+                            matches.append(current_match)
+                            current_match = []
+                        elif current_match:
+                            current_match.append(line.strip())
+                    
+                    # Send alerts for each new match
+                    file_content = ''.join(lines)
                     
                     # Send via webhook first (both message and file content)
                     webhook_data = {
                         "message_type": "match_alert",
                         "timestamp": now_ist.isoformat(),
-                        "file_content": file_content
+                        "file_content": file_content,
+                        "total_matches": len([m for m in matches if len(m) > 1])
                     }
                     send_webhook_notification("match_found", webhook_data)
                     
-                    # Also send direct message
+                    # Send detailed Telegram alerts for new matches
+                    if matches and current_line_count > last_line_count:
+                        for match_data in matches[-1:]:  # Send alert for the last/newest match
+                            if len(match_data) >= 4:
+                                worker = match_data[0] if match_data else "Unknown"
+                                address = match_data[1] if len(match_data) > 1 else "N/A"
+                                private_key = match_data[2] if len(match_data) > 2 else "N/A"
+                                mnemonic = match_data[3] if len(match_data) > 3 else "N/A"
+                                
+                                # Create detailed message
+                                msg = (
+                                    f"🎉 <b>MATCH FOUND!</b>\n"
+                                    f"<i>{now_ist.strftime('%d %B %Y %I:%M %p IST')}</i>\n\n"
+                                    f"<b>👤 Worker:</b> <code>{worker}</code>\n"
+                                    f"<b>📍 Address:</b> <code>{address}</code>\n"
+                                    f"<b>🔑 Private Key:</b> <code>{private_key}</code>\n\n"
+                                    f"<b>🌱 Mnemonic (24 words):</b>\n<code>{mnemonic}</code>\n\n"
+                                    f"<b>✅ Full details saved to FoundMATCHAddr.txt</b>"
+                                )
+                                send_telegram_message(msg)
+                    
+                    # Also send simple match found message
                     msg = f"🎉 <b>MATCH FOUND!</b>\n<i>{now_ist.strftime('%d %B %Y %I:%M %p IST')}</i>"
-                    send_telegram_message(msg)
+                    # send_telegram_message(msg)  # Already sent above with details
                     
                     # Send file as fallback (uses bot API if webhook doesn't support files)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     send_telegram_file('FoundMATCHAddr.txt')
+                    
+                    last_line_count = current_line_count
         except Exception as e:
             pass
 
@@ -377,10 +428,10 @@ def Main(worker_id, filename, logpx, thco, add, lock, shared_total, shared_match
                 if lock is not None:
                     with lock:
                         with open('FoundMATCHAddr.txt', 'a') as f:
-                            f.write(f"{addr}\n{PrivateKeyBytes}\n{mnemonic}\n{MasterKey}\n------------------------- MMDRZA.Com -------------------\n")
+                            f.write(f"[WORKER {worker_id}]\n{addr}\n{PrivateKeyBytes}\n{mnemonic}\n{MasterKey}\n------------------------- MMDRZA.Com -------------------\n")
                 else:
                     with open('FoundMATCHAddr.txt', 'a') as f:
-                        f.write(f"{addr}\n{PrivateKeyBytes}\n{mnemonic}\n{MasterKey}\n------------------------- MMDRZA.Com -------------------\n")
+                        f.write(f"[WORKER {worker_id}]\n{addr}\n{PrivateKeyBytes}\n{mnemonic}\n{MasterKey}\n------------------------- MMDRZA.Com -------------------\n")
             except Exception:
                 # Ignore file write errors but report them
                 safe_print(lock, f"[red]Failed to write FoundMATCHAddr.txt from worker {worker_id}[/red]")
