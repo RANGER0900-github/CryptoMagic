@@ -1,0 +1,21 @@
+# CryptoMagic - Ethereum Address Hunter & Key Finder
+# Core Dependencies
+
+# BIP39/BIP32/BIP44 Mnemonic and Key Derivation
+bip_utils==2.10.0
+
+# Beautiful Console Output and Formatting
+rich==14.2.0
+
+# HTTP Requests for Webhook/Telegram API
+requests==2.32.5
+
+# System Monitoring (CPU, Memory Usage)
+psutil==7.1.3
+
+# Optional Dependencies for Development/Testing
+# Uncomment as needed:
+# pytest>=7.4.0          # Testing framework
+# black>=23.10.0         # Code formatter
+# pylint>=3.0.0          # Code linter
+# mypy>=1.6.0            # Static type checker
