@@ -71,11 +71,14 @@ python3 ethmagic.py -f eth5.txt -v 1000 -n 2
 
 ## 📚 Arguments Reference
 
-| Argument | Short | Type | Required | Description |
-|----------|-------|------|----------|-------------|
-| `--file` | `-f` | string | ✅ Yes | Path to target address file (e.g., `eth5.txt`) |
-| `--view` | `-v` | integer | ✅ Yes | Report interval (addresses per report) |
-| `--thread` | `-n` | integer | ✅ Yes | Number of worker processes to spawn |
+| Argument | Short | Type | Required | Default | Description |
+|----------|-------|------|----------|---------|-------------|
+| `--file` | `-f` | string | ✅ Yes | - | Path to target address file (e.g., `eth5.txt`) |
+| `--view` | `-v` | integer | ✅ Yes | - | Report interval (addresses per report) |
+| `--thread` | `-n` | integer | ✅ Yes | - | Number of worker processes to spawn |
+| `--worker-name` | - | string | ⭕ No | `worker-1` | Custom worker identifier for logging |
+| `--webhook-url` | - | string | ⭕ No | - | Custom webhook URL (disables auto-startup) |
+| `--port` | - | integer | ⭕ No | `3000` | Port for auto-starting webhook server |
 
 ---
 
@@ -128,6 +131,75 @@ python3 ethmagic.py -f eth5.txt -v 500 -n 2
 ```
 
 **Use Case:** Real-time monitoring and quick feedback.
+
+---
+
+### Example 5: Auto-Starting Webhook Server with Telegram Notifications
+Start the bot with automatic webhook server on a custom port with real-time Telegram updates:
+
+```bash
+python3 ethmagic.py -f eth5.txt -v 50000 -n 4 --worker-name final-demo --port 5689
+```
+
+**Features:**
+- 🚀 Webhook server auto-starts on port 5689
+- 📱 Sends startup notification to Telegram (with configuration details)
+- 📊 Sends daily stats reports (addresses generated, rate, CPU%, time elapsed)
+- 🎯 Sends match notifications immediately when found
+- ✅ Graceful shutdown (sends shutdown message, kills server automatically)
+
+**What Happens:**
+```
+🚀 Starting webhook server on port 5689...
+✅ Webhook server started on port 5689
+📱 Sending startup notification to Telegram...
+[Bot starts generating addresses...]
+```
+
+---
+
+## 📱 Telegram Integration & Webhook Notifications
+
+### Quick Setup
+
+1. **Set Telegram Credentials** (environment variables):
+```bash
+export TELEGRAM_BOT_TOKEN="your_bot_token_here"
+export TELEGRAM_CHAT_ID="your_chat_id_here"
+```
+
+2. **Run with Auto Webhook**:
+```bash
+python3 ethmagic.py -f eth5.txt -v 50000 -n 4 --port 5689
+```
+
+That's it! You'll receive:
+- ✅ **Startup Message** - Bot configuration and worker details
+- 📊 **Daily Stats** - Addresses generated, generation rate, CPU usage, time elapsed
+- 🎯 **Match Alerts** - Immediate notification when a match is found
+- 🛑 **Shutdown Message** - Graceful shutdown with final statistics
+
+### Advanced: Custom Webhook URL
+
+If you're running the webhook server separately or on a different machine:
+
+```bash
+# Terminal 1: Start webhook server manually
+python3 webhook_server.py
+
+# Terminal 2: Start bot with custom webhook URL
+python3 ethmagic.py -f eth5.txt -v 50000 -n 4 --worker-name demo --webhook-url http://localhost:3000/webhook
+```
+
+### Multi-Platform Support
+
+The webhook system supports Telegram (default) plus optional Discord and Slack webhooks. Configure in `webhook_server.py`:
+
+```python
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'your_token')
+DISCORD_WEBHOOK = os.environ.get('DISCORD_WEBHOOK', None)
+SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK', None)
+```
 
 ---
 

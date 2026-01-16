@@ -1,0 +1,240 @@
+
+================================================================================
+[2026-01-16T20:17:20.047292] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:47:20.044380+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "final-demo",
+    "target_file": "eth5.txt",
+    "worker_count": 4,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:47 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>final-demo</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>4</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:22:22.452311] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:52:22.448708+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "final-demo",
+    "target_file": "eth5.txt",
+    "worker_count": 4,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:52 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>final-demo</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>4</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:23:54.812255] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:53:54.808413+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "test-run",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:53 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>test-run</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:25:04.421563] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:55:04.418022+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "shutdown-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:55 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>shutdown-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:25:08.712786] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:55:08.709218+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "shutdown-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:55 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>shutdown-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:25:49.729361] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:55:49.725820+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "ctrl-c-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:55 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>ctrl-c-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:26:21.494610] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:56:21.491087+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "graceful-shutdown",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:56 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>graceful-shutdown</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:26:49.206469] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:56:49.202873+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "graceful-shutdown",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:56 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>graceful-shutdown</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:28:22.271788] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:58:22.267597+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "final-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:58 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>final-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:29:04.209064] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:59:04.205626+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "debug-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:59 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>debug-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:29:52.135086] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T01:59:52.131640+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "debug-test2",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 01:59 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>debug-test2</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:32:48.430422] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T02:02:48.426789+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "stderr-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 02:02 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>stderr-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:33:59.573007] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T02:03:59.569451+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "ctrlc-fix-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 02:03 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>ctrlc-fix-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:34:14.710573] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T02:04:14.707088+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "final-fix",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 02:04 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>final-fix</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:35:10.121413] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T02:05:10.117896+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "proper-test",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 02:05 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>proper-test</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================
+
+================================================================================
+[2026-01-16T20:36:49.307434] Event: startup
+{
+  "event_type": "startup",
+  "timestamp": "2026-01-17T02:06:49.303084+05:30",
+  "data": {
+    "message_type": "startup",
+    "worker_name": "manual-ctrlc",
+    "target_file": "eth5.txt",
+    "worker_count": 2,
+    "formatted_message": "<b>\ud83e\udd16 Bot Started</b>\n<b>Date:</b> 17 January 2026\n<b>Time:</b> 02:06 AM (IST)\n\n<b>\u2699\ufe0f Configuration:</b>\n<b>Worker Name:</b> <code>manual-ctrlc</code>\n<b>Target File:</b> <code>eth5.txt</code>\n<b>Workers:</b> <b>2</b>\n\n<b>\u2705 Ready to hunt addresses!</b>"
+  }
+}
+================================================================================

